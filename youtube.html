@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Consent - IP Logger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .content {
+            display: none;
+            text-align: center;
+            color: white;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .content.show {
+            display: block;
+        }
+
+        .content h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .overlay.hide {
+            display: none;
+        }
+
+        .cookie-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .cookie-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 32px;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        p {
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .warning {
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .warning-icon {
+            color: #667eea;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .warning p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.5);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-message {
+            text-align: center;
+            color: white;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 40px;
+        }
+
+        .success-message h1 {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .success-message p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Cookie Consent Overlay -->
+    <div class="overlay" id="cookieOverlay">
+        <div class="cookie-card">
+            <div class="cookie-icon">🍪</div>
+            <h2>Cookie Consent Required</h2>
+            <p>To access this site, you must accept our cookies policy. Your IP address will be logged for security purposes.</p>
+
+            <div class="warning">
+                <div class="warning-icon">🔒</div>
+                <p>By accepting, you agree to our use of cookies and acknowledge that your IP address will be collected and sent to Discord.</p>
+            </div>
+
+            <button onclick="acceptCookies()" id="acceptBtn">Accept & Continue</button>
+        </div>
+    </div>
+
+    <!-- Main Content (shown after acceptance) -->
+    <div class="content" id="mainContent">
+        <div class="success-message">
+            <div class="success-icon">🎉</div>
+            <h1>Welcome!</h1>
+            <p>Thanks for accepting cookies. Your IP has been logged successfully.</p>
+            <p style="margin-top: 24px; font-size: 1rem;">This is where your actual website content would appear.</p>
+        </div>
+    </div>
+
+    <script>
+        // 👇 PASTE YOUR DISCORD WEBHOOK URL HERE
+        const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN';
+
+        async function getUserIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                console.error('Error fetching IP:', error);
+                return 'Unable to fetch IP';
+            }
+        }
+
+        async function sendToDiscord(ip, webhookUrl) {
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        embeds: [{
+                            title: '🍪 Cookie Consent Accepted',
+                            description: 'A user has accepted cookies and accessed the site.',
+                            color: 7419530,
+                            fields: [
+                                {
+                                    name: 'IP Address',
+                                    value: `\`${ip}\``,
+                                    inline: true
+                                },
+                                {
+                                    name: 'Timestamp',
+                                    value: new Date().toLocaleString(),
+                                    inline: true
+                                },
+                                {
+                                    name: 'User Agent',
+                                    value: `\`\`\`${navigator.userAgent}\`\`\``,
+                                    inline: false
+                                }
+                            ],
+                            footer: {
+                                text: 'Cookie Consent Tracker'
+                            },
+                            timestamp: new Date().toISOString()
+                        }]
+                    })
+                });
+
+                return response.ok;
+            } catch (error) {
+                console.error('Error sending to Discord:', error);
+                return false;
+            }
+        }
+
+        async function acceptCookies() {
+            const acceptBtn = document.getElementById('acceptBtn');
+            
+            acceptBtn.disabled = true;
+            acceptBtn.textContent = 'Processing...';
+
+            const ip = await getUserIP();
+            const success = await sendToDiscord(ip, DISCORD_WEBHOOK);
+
+            if (success) {
+                setTimeout(() => {
+                    document.getElementById('cookieOverlay').classList.add('hide');
+                    document.getElementById('mainContent').classList.add('show');
+                }, 500);
+            } else {
+                alert('Failed to send to Discord. Please check your webhook URL in the code.');
+                acceptBtn.disabled = false;
+                acceptBtn.textContent = 'Accept & Continue';
+            }
+        }
+    </script>
+</body>
+</html>
